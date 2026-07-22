@@ -6,11 +6,14 @@ The key artifact is an atlas that maps each target section to a source, the exac
 
 This workflow was adapted from a portfolio-building walkthrough by [@monokern](https://x.com/monokern/status/2071246711222055363), then extended with reference hierarchy, attribution, mobile behavior, accessibility, performance, and browser-verification gates. No source code from that walkthrough is included.
 
-## Run
+## Install and run
 
 ```bash
-PYTHONPATH=src python3 -m reference_atlas.cli examples/atlas.json /tmp/atlas.md
-python3 -m unittest discover -s tests -v
+python3 -m venv .venv
+.venv/bin/pip install -e .
+
+.venv/bin/reference-atlas examples/atlas.json /tmp/atlas.md
+.venv/bin/python -m unittest discover -s tests -v
 ```
 
 MIT licensed.
