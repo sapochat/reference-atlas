@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Reference Atlas example</title>
+  <desc id="desc">A synthetic section-level map connecting a target website hero and work index to distinct visual references and implementation rules.</desc>
+  <rect width="1200" height="720" fill="#0f1115"/>
+  <text x="70" y="82" fill="#f3efe8" font-family="Arial, sans-serif" font-size="42" font-weight="700">Reference Atlas</text>
+  <text x="70" y="120" fill="#9ca6b5" font-family="Arial, sans-serif" font-size="20">Evidence for each section. Boundaries against copying. Concrete build implications.</text>
+
+  <text x="70" y="180" fill="#d6a84b" font-family="Arial, sans-serif" font-size="17" font-weight="700">TARGET EXPERIENCE</text>
+  <text x="840" y="180" fill="#d6a84b" font-family="Arial, sans-serif" font-size="17" font-weight="700">REFERENCE CONTROL</text>
+
+  <rect x="70" y="210" width="470" height="180" rx="14" fill="#171b22" stroke="#343c49"/>
+  <text x="100" y="255" fill="#f3efe8" font-family="Arial, sans-serif" font-size="27" font-weight="700">Hero</text>
+  <text x="100" y="292" fill="#c4cad3" font-family="Arial, sans-serif" font-size="18">Borrow: framing + type scale</text>
+  <text x="100" y="325" fill="#e18b83" font-family="Arial, sans-serif" font-size="18">Do not copy: identity + copy</text>
+  <text x="100" y="358" fill="#8fc7b5" font-family="Arial, sans-serif" font-size="18">Build: layered media · static touch fallback</text>
+
+  <rect x="70" y="430" width="470" height="180" rx="14" fill="#171b22" stroke="#343c49"/>
+  <text x="100" y="475" fill="#f3efe8" font-family="Arial, sans-serif" font-size="27" font-weight="700">Work index</text>
+  <text x="100" y="512" fill="#c4cad3" font-family="Arial, sans-serif" font-size="18">Borrow: list density</text>
+  <text x="100" y="545" fill="#e18b83" font-family="Arial, sans-serif" font-size="18">Do not copy: exact grid</text>
+  <text x="100" y="578" fill="#8fc7b5" font-family="Arial, sans-serif" font-size="18">Build: separate layout · single-column mobile</text>
+
+  <path d="M540 300 C650 300 690 275 805 275" fill="none" stroke="#d6a84b" stroke-width="3"/>
+  <path d="M540 520 C650 520 690 495 805 495" fill="none" stroke="#d6a84b" stroke-width="3"/>
+  <circle cx="540" cy="300" r="5" fill="#d6a84b"/><circle cx="805" cy="275" r="5" fill="#d6a84b"/>
+  <circle cx="540" cy="520" r="5" fill="#d6a84b"/><circle cx="805" cy="495" r="5" fill="#d6a84b"/>
+
+  <rect x="805" y="210" width="325" height="130" rx="14" fill="#201d17" stroke="#6f5a2f"/>
+  <text x="835" y="255" fill="#f3efe8" font-family="Arial, sans-serif" font-size="24" font-weight="700">Reference A</text>
+  <text x="835" y="290" fill="#c4cad3" font-family="Arial, sans-serif" font-size="17">Controls typography + framing</text>
+  <text x="835" y="318" fill="#9ca6b5" font-family="Arial, sans-serif" font-size="15">Source attribution retained</text>
+
+  <rect x="805" y="430" width="325" height="130" rx="14" fill="#201d17" stroke="#6f5a2f"/>
+  <text x="835" y="475" fill="#f3efe8" font-family="Arial, sans-serif" font-size="24" font-weight="700">Reference B</text>
+  <text x="835" y="510" fill="#c4cad3" font-family="Arial, sans-serif" font-size="17">Controls density, not the grid</text>
+  <text x="835" y="538" fill="#9ca6b5" font-family="Arial, sans-serif" font-size="15">Synthetic example</text>
+
+  <text x="70" y="675" fill="#747f8e" font-family="Arial, sans-serif" font-size="16">One site · multiple references · explicit hierarchy · no wholesale cloning</text>
+</svg>

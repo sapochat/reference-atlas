@@ -6,6 +6,10 @@ The key artifact is an atlas that maps each target section to a source, the exac
 
 This workflow was adapted from a portfolio-building walkthrough by [@monokern](https://x.com/monokern/status/2071246711222055363), then extended with reference hierarchy, attribution, mobile behavior, accessibility, performance, and browser-verification gates. No source code from that walkthrough is included.
 
+![Synthetic Reference Atlas showing section-level borrowing rules and reference hierarchy](docs/reference-atlas-example.svg)
+
+The visual above is synthetic. The committed [rendered Markdown atlas](docs/example-atlas.md) comes from the same example JSON used by the CLI tests.
+
 ## Install and run
 
 ```bash
