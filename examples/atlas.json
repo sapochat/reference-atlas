@@ -1,0 +1,36 @@
+{
+  "project": "Independent studio portfolio",
+  "design_read": "Editorial, dark, image-led, restrained motion",
+  "invariants": [
+    "Large serif headlines",
+    "Graphite background",
+    "One warm accent",
+    "Static touch fallback"
+  ],
+  "hierarchy": {
+    "typography": "Reference A",
+    "layout": "Reference B",
+    "motion": "Reference C",
+    "imagery": "Original project assets"
+  },
+  "items": [
+    {
+      "target": "Hero",
+      "reference": "reference/01-hero.png",
+      "borrow": "framing and type scale",
+      "do_not_copy": "identity and copy",
+      "build_implication": "layered media and restrained nav",
+      "mobile": "static crop with no pointer effect",
+      "attribution": "Synthetic example created for this repository"
+    },
+    {
+      "target": "Work index",
+      "reference": "reference/02-index.png",
+      "borrow": "list density",
+      "do_not_copy": "exact grid",
+      "build_implication": "separate index layout",
+      "mobile": "single-column cards",
+      "attribution": "Synthetic example created for this repository"
+    }
+  ]
+}
