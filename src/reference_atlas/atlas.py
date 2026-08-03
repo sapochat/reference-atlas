@@ -8,21 +8,45 @@ def validate_atlas(data: object) -> list[str]:
     if not isinstance(data, Mapping):
         return ["atlas must be an object"]
 
-    errors=[]
-    for key in REQUIRED_ROOT:
-        if not data.get(key): errors.append(f"missing root field: {key}")
-    if not isinstance(data.get("invariants",[]),list) or len(data.get("invariants",[]))<3: errors.append("invariants must contain at least three items")
-    if data.get("hierarchy") and not isinstance(data["hierarchy"], Mapping): errors.append("hierarchy must be an object")
-    if not isinstance(data.get("items"), list):
-        errors.append("items must be a list")
+    errors: list[str] = []
+
+    for key in ("project", "design_read"):
+        value = data.get(key)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"root field must be non-empty text: {key}")
+
+    invariants = data.get("invariants")
+    if not isinstance(invariants, list) or len(invariants) < 3:
+        errors.append("invariants must contain at least three items")
+    elif any(not isinstance(value, str) or not value.strip() for value in invariants):
+        errors.append("invariants must contain only non-empty text")
+
+    hierarchy = data.get("hierarchy")
+    if not isinstance(hierarchy, Mapping) or not hierarchy:
+        errors.append("hierarchy must be a non-empty object")
+    elif any(
+        not isinstance(key, str)
+        or not key.strip()
+        or not isinstance(value, str)
+        or not value.strip()
+        for key, value in hierarchy.items()
+    ):
+        errors.append("hierarchy keys and values must be non-empty text")
+
+    items = data.get("items")
+    if not isinstance(items, list) or not items:
+        errors.append("items must be a non-empty list")
         return errors
-    for i,item in enumerate(data.get("items",[])):
+
+    for index, item in enumerate(items):
         if not isinstance(item, Mapping):
-            errors.append(f"item {i} must be an object")
+            errors.append(f"item {index} must be an object")
             continue
         for key in REQUIRED_ITEM:
-            if not item.get(key): errors.append(f"item {i} missing field: {key}")
-            elif not isinstance(item[key], str): errors.append(f"item {i} field must be text: {key}")
+            value = item.get(key)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(f"item {index} field must be non-empty text: {key}")
+
     return errors
 
 def render_markdown(data: object) -> str:
