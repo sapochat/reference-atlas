@@ -1,3 +1,6 @@
+from collections.abc import Mapping
+
+
 REQUIRED_ITEM = ["target", "reference", "borrow", "do_not_copy", "build_implication", "mobile", "attribution"]
 REQUIRED_ROOT = ["project", "design_read", "invariants", "hierarchy", "items"]
 
@@ -6,9 +9,17 @@ def validate_atlas(data: dict) -> list[str]:
     for key in REQUIRED_ROOT:
         if not data.get(key): errors.append(f"missing root field: {key}")
     if not isinstance(data.get("invariants",[]),list) or len(data.get("invariants",[]))<3: errors.append("invariants must contain at least three items")
+    if data.get("hierarchy") and not isinstance(data["hierarchy"], Mapping): errors.append("hierarchy must be an object")
+    if data.get("items") and not isinstance(data["items"], list):
+        errors.append("items must be a list")
+        return errors
     for i,item in enumerate(data.get("items",[])):
+        if not isinstance(item, Mapping):
+            errors.append(f"item {i} must be an object")
+            continue
         for key in REQUIRED_ITEM:
             if not item.get(key): errors.append(f"item {i} missing field: {key}")
+            elif not isinstance(item[key], str): errors.append(f"item {i} field must be text: {key}")
     return errors
 
 def render_markdown(data: dict) -> str:
