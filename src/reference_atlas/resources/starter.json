@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "project": "TBD: Name the project — original design draft",
+  "design_read": "TBD: Describe the intended visual direction and the audience's primary task",
+  "invariants": [
+    "TBD: Keep the primary task visible in the content hierarchy",
+    "TBD: Use a consistent, readable type scale",
+    "TBD: Preserve a logical reading order across viewport sizes"
+  ],
+  "sources": {},
+  "hierarchy": {
+    "typography": {
+      "decision": "original",
+      "reason": "TBD: Choose an original type scale for headings and supporting text"
+    },
+    "layout": {
+      "decision": "original",
+      "reason": "TBD: Arrange content around the primary task without borrowing a source composition"
+    },
+    "motion": {
+      "decision": "not_applicable",
+      "reason": "TBD: Start with a static experience; revisit if motion serves a user need"
+    },
+    "imagery": {
+      "decision": "not_applicable",
+      "reason": "TBD: Start without imagery; revisit if an image clarifies the content"
+    }
+  },
+  "items": [
+    {
+      "id": "introduction",
+      "target": "TBD: Introduction and primary action",
+      "original_design": "TBD: Create an original text-led introduction that explains the purpose and next step",
+      "build_implication": "TBD: Define semantic headings, supporting copy and the primary action",
+      "mobile": "TBD: Define a single-column reading order and verify wrapping at narrow widths",
+      "requirements": {
+        "accessibility": "TBD: Specify heading order, keyboard access, focus visibility and contrast requirements",
+        "reduced_motion": "TBD: Keep essential content static and define reduced-motion behavior if animation is added",
+        "performance": "TBD: Set loading budgets and avoid unnecessary media or scripts"
+      },
+      "checks": [
+        {"criterion": "mobile", "status": "not_checked"},
+        {"criterion": "accessibility", "status": "not_checked"},
+        {"criterion": "reduced_motion", "status": "not_checked"},
+        {"criterion": "performance", "status": "not_checked"}
+      ]
+    }
+  ]
+}

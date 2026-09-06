@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/sapochat/reference-atlas/main/schemas/atlas-v2.schema.json",
+  "title": "Reference Atlas v2",
+  "description": "Structural contract for a reference atlas draft. Item ID uniqueness, check criterion uniqueness, source reference resolution, URL parser checks for port range and bracketed IP validity, and opt-in filesystem containment/existence checks are runtime semantics beyond this schema. Warnings are not validation failures or verification of visual fidelity. JSON Schema considers 2.0 an integer; the Python runtime additionally requires an exact integer schema_version, rejecting floats. Local locators are relative to the atlas directory, and checked files must be inside asset_root; asset_root is not prepended to locators.",
+  "type": "object",
+  "required": ["schema_version", "project", "design_read", "invariants", "sources", "hierarchy", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "integer", "const": 2},
+    "project": {"$ref": "#/$defs/text"},
+    "design_read": {"$ref": "#/$defs/text"},
+    "invariants": {"type": "array", "minItems": 3, "items": {"$ref": "#/$defs/text"}},
+    "asset_root": {"$ref": "#/$defs/localPath", "default": "assets"},
+    "sources": {"type": "object", "propertyNames": {"$ref": "#/$defs/id"}, "additionalProperties": {"$ref": "#/$defs/source"}},
+    "hierarchy": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "typography": {"$ref": "#/$defs/hierarchyEntry"},
+        "layout": {"$ref": "#/$defs/hierarchyEntry"},
+        "motion": {"$ref": "#/$defs/hierarchyEntry"},
+        "imagery": {"$ref": "#/$defs/hierarchyEntry"}
+      }
+    },
+    "items": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/item"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "pattern": "\\S"},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$(?![\\s\\S])"},
+    "httpUrl": {"type": "string", "pattern": "^[hH][tT][tT][pP][sS]?://(?![^/?#]*@)(?:\\[[0-9a-fA-F:.]+\\]|[^\\s/:?#@\\\\]+)(?::[0-9]+)?(?:[/?#][^\\s\\\\]*)?$(?![\\s\\S])"},
+    "localPath": {"type": "string", "pattern": "^(?!/)(?![\\s\\S]*(?:^|/)\\.\\.(?:/|$))(?!\\s*$)[^:\\\\\\x00-\\x1f\\x7f]+$(?![\\s\\S])"},
+    "locator": {"anyOf": [{"$ref": "#/$defs/httpUrl"}, {"$ref": "#/$defs/localPath"}]},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["title", "locator", "attribution"],
+      "properties": {
+        "title": {"$ref": "#/$defs/text"},
+        "locator": {"$ref": "#/$defs/locator"},
+        "attribution": {"$ref": "#/$defs/text"},
+        "url": {"$ref": "#/$defs/httpUrl"},
+        "rights_notes": {"$ref": "#/$defs/text"}
+      }
+    },
+    "hierarchyEntry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["reason"],
+      "oneOf": [{"required": ["source"]}, {"required": ["decision"]}],
+      "properties": {
+        "reason": {"$ref": "#/$defs/text"},
+        "source": {"$ref": "#/$defs/id"},
+        "decision": {"enum": ["original", "not_applicable"]}
+      }
+    },
+    "reference": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "borrow", "do_not_copy"],
+      "properties": {
+        "source": {"$ref": "#/$defs/id"},
+        "borrow": {"$ref": "#/$defs/text"},
+        "do_not_copy": {"$ref": "#/$defs/text"},
+        "evidence": {"$ref": "#/$defs/locator"}
+      }
+    },
+    "requirements": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "accessibility": {"$ref": "#/$defs/text"},
+        "reduced_motion": {"$ref": "#/$defs/text"},
+        "performance": {"$ref": "#/$defs/text"}
+      }
+    },
+    "check": {
+      "type": "object", "additionalProperties": false,
+      "required": ["criterion", "status"],
+      "properties": {
+        "criterion": {"enum": ["mobile", "accessibility", "reduced_motion", "performance"]},
+        "status": {"enum": ["not_checked", "pass", "fail", "not_applicable"]},
+        "method": {"$ref": "#/$defs/text"},
+        "evidence": {"$ref": "#/$defs/locator"},
+        "note": {"$ref": "#/$defs/text"},
+        "reason": {"$ref": "#/$defs/text"}
+      },
+      "allOf": [
+        {"if": {"properties": {"status": {"enum": ["pass", "fail"]}}, "required": ["status"]}, "then": {"required": ["method", "evidence"]}},
+        {"if": {"properties": {"status": {"const": "not_applicable"}}, "required": ["status"]}, "then": {"required": ["reason"]}}
+      ]
+    },
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "target", "build_implication", "mobile"],
+      "oneOf": [{"required": ["references"]}, {"required": ["original_design"]}],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "target": {"$ref": "#/$defs/text"},
+        "build_implication": {"$ref": "#/$defs/text"},
+        "mobile": {"$ref": "#/$defs/text"},
+        "references": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/reference"}},
+        "original_design": {"$ref": "#/$defs/text"},
+        "requirements": {"$ref": "#/$defs/requirements"},
+        "checks": {"type": "array", "items": {"$ref": "#/$defs/check"}}
+      }
+    }
+  }
+}

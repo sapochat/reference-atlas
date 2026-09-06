@@ -1,0 +1,82 @@
+{
+  "schema_version": 2,
+  "project": "Reference handoff page — synthetic draft",
+  "design_read": "Dark, clear and diagram-led; distinguish decisions from verification",
+  "asset_root": "assets",
+  "invariants": [
+    "Readable sans-serif labels",
+    "Warm accent on a graphite background",
+    "No motion needed to understand the content"
+  ],
+  "sources": {
+    "atlas-diagram": {
+      "title": "Synthetic Reference Atlas diagram",
+      "locator": "assets/reference-atlas-example.svg",
+      "attribution": "Original synthetic diagram from this repository",
+      "rights_notes": "Repository-owned example asset; not a screenshot of a third-party site or evidence of a tested implementation"
+    }
+  },
+  "hierarchy": {
+    "typography": {
+      "source": "atlas-diagram",
+      "reason": "Borrow the distinction between large labels and supporting notes"
+    },
+    "layout": {
+      "decision": "original",
+      "reason": "Use a linear reading order rather than the diagram's two-column map"
+    },
+    "motion": {
+      "decision": "original",
+      "reason": "Keep the page static"
+    },
+    "imagery": {
+      "decision": "not_applicable",
+      "reason": "The proposed page needs no photography"
+    }
+  },
+  "items": [
+    {
+      "id": "hero",
+      "target": "Introduction",
+      "references": [
+        {
+          "source": "atlas-diagram",
+          "borrow": "Warm accent, graphite background and clear label hierarchy",
+          "do_not_copy": "Exact diagram composition or the source's labels",
+          "evidence": "assets/reference-atlas-example.svg"
+        }
+      ],
+      "build_implication": "Use semantic headings and a bounded text column",
+      "mobile": "Keep the reading order linear without horizontal scrolling",
+      "requirements": {
+        "accessibility": "Measure text contrast and verify heading order",
+        "reduced_motion": "Do not introduce entrance animation",
+        "performance": "Avoid loading decorative media above the fold"
+      },
+      "checks": [
+        {"criterion": "mobile", "status": "not_checked", "note": "No implementation has been built"},
+        {"criterion": "accessibility", "status": "not_checked"},
+        {"criterion": "reduced_motion", "status": "not_checked"},
+        {"criterion": "performance", "status": "not_checked"}
+      ]
+    },
+    {
+      "id": "footer",
+      "target": "Attribution footer",
+      "original_design": "A plain text footer credits sources without borrowing a reference composition",
+      "build_implication": "Place source credits after the main content",
+      "mobile": "Allow credit text to wrap naturally",
+      "requirements": {
+        "accessibility": "Keep attribution readable at normal text size",
+        "reduced_motion": "Use static text",
+        "performance": "No additional assets required"
+      },
+      "checks": [
+        {"criterion": "mobile", "status": "not_checked"},
+        {"criterion": "accessibility", "status": "not_checked"},
+        {"criterion": "reduced_motion", "status": "not_checked"},
+        {"criterion": "performance", "status": "not_checked"}
+      ]
+    }
+  ]
+}
