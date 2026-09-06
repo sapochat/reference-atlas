@@ -1,0 +1,10 @@
+include README.md CHANGELOG.md LICENSE SKILL.md ATTRIBUTION.md requirements-test.txt
+recursive-include tests *
+recursive-include examples *
+recursive-include docs *
+recursive-include schemas *.json
+recursive-include scripts *.py
+recursive-include src/reference_atlas/resources *.json
+prune tests/__pycache__
+prune scripts/__pycache__
+global-exclude *.py[cod] .DS_Store
