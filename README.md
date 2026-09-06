@@ -92,6 +92,10 @@ Existing destinations require explicit `--force`. Source files—including hardl
 and symlink aliases—cannot be replaced by conversion, even with `--force`.
 Destination symlinks, directories and special files are rejected. Output is
 prepared before atomic publication, and routine failures preserve existing files.
+On POSIX, new outputs use normal file permissions filtered by your umask;
+`--force` preserves an existing destination's ordinary permission bits, but not
+setuid, setgid or sticky bits. Ownership, ACLs and extended attributes are not
+preserved by replacement.
 Initialization creates only its requested file, not parent directories or assets.
 
 ```sh

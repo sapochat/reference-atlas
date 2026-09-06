@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- POSIX output permissions: new renders and starters honor the process umask;
+  forced replacements retain existing ordinary permission bits without copying
+  special mode bits. Staging remains private until atomic publication.
+
 ## 0.2.0 — 2026-09-06
 
 ### Added

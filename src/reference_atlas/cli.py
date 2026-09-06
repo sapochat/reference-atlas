@@ -13,7 +13,7 @@ from .atlas import render_markdown
 from .validation import inspect_atlas
 
 
-def _check_destination(source_stat, output: Path, force: bool) -> None:
+def _check_destination(source_stat, output: Path, force: bool) -> os.stat_result | None:
     try:
         destination_stat = output.lstat()
     except FileNotFoundError:
@@ -26,13 +26,23 @@ def _check_destination(source_stat, output: Path, force: bool) -> None:
         raise OSError(f"{output}: input and output must be different files")
     if not force:
         raise FileExistsError(f"{output}: output already exists (use --force to overwrite)")
+    return destination_stat
 
 
 def _publish(markdown: str, source_stat, output: Path, force: bool) -> None:
     """Write fully, then publish atomically; never clobber without --force."""
     _check_destination(source_stat, output, force)
-    fd, temporary = tempfile.mkstemp(prefix=".reference-atlas-", suffix=".tmp", dir=output.parent)
+    # Keep unfinished content private while letting the kernel apply the real
+    # umask to a normal 0666 creation. Reading umask via os.umask would race
+    # with other threads; mkstemp would instead impose an unwanted 0600 mode.
+    staging = Path(tempfile.mkdtemp(prefix=".reference-atlas-", dir=output.parent))
+    temporary = staging / "output.tmp"
     try:
+        if os.name == "posix":
+            # The umask can remove owner access from mkdtemp too. Restore
+            # private traversal without relaxing the output file's umask.
+            os.chmod(staging, 0o700)
+        fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
         try:
             stream = os.fdopen(fd, "w", encoding="utf-8", newline="\n")
         except BaseException:
@@ -40,8 +50,12 @@ def _publish(markdown: str, source_stat, output: Path, force: bool) -> None:
             raise
         with stream:
             stream.write(markdown)
-        # Recheck after writing in case the destination changed in the meantime.
-        _check_destination(source_stat, output, force)
+            stream.flush()
+            # Use the rechecked destination, not a stale pre-write mode. Only
+            # ordinary POSIX permissions survive replacement, never special bits.
+            destination_stat = _check_destination(source_stat, output, force)
+            if destination_stat is not None and os.name == "posix":
+                os.fchmod(stream.fileno(), destination_stat.st_mode & 0o777)
         if force:
             os.replace(temporary, output)
         else:
@@ -50,9 +64,12 @@ def _publish(markdown: str, source_stat, output: Path, force: bool) -> None:
             os.link(temporary, output)
     finally:
         try:
-            os.unlink(temporary)
-        except FileNotFoundError:
-            pass
+            try:
+                os.unlink(temporary)
+            except FileNotFoundError:
+                pass
+        finally:
+            staging.rmdir()
 
 
 def _error(path: str, message: object, code: int) -> int:
