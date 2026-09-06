@@ -49,9 +49,20 @@ class InspectionCliTests(unittest.TestCase):
     def save(self):
         self.source.write_text(json.dumps(self.data), encoding="utf-8")
 
-    def run_cli(self, *args):
+    def run_cli(self, *args, decoder_recursion=False):
+        command = [sys.executable, "-m", "reference_atlas.cli"]
+        if decoder_recursion:
+            # Leave source open/fstat and CLI error reporting real; only the
+            # decoder raises, independently of interpreter nesting thresholds.
+            script = (
+                "from unittest.mock import patch\n"
+                "from reference_atlas import cli\n"
+                "with patch.object(cli.json, 'load', side_effect=RecursionError('decoder recursion guard')):\n"
+                "    raise SystemExit(cli.main())\n"
+            )
+            command = [sys.executable, "-c", script]
         return subprocess.run(
-            [sys.executable, "-m", "reference_atlas.cli", *map(str, args)],
+            [*command, *map(str, args)],
             cwd=self.root, env=dict(os.environ, PYTHONPATH=str(ROOT / "src"),
                                    PYTHONDONTWRITEBYTECODE="1"),
             capture_output=True, encoding="utf-8", timeout=10,
@@ -328,17 +339,26 @@ class InspectionCliTests(unittest.TestCase):
 
     def test_decoder_resource_guards_have_json_envelopes(self):
         limit = getattr(sys, "get_int_max_str_digits", lambda: 0)()
-        cases = [b'[' * 100_000 + b'0' + b']' * 100_000]
+        # Use valid input for fault injection, retaining real integer decoding.
+        cases = [("recursion", self.source.read_bytes())]
         if limit:
-            cases.append(b'{"number": ' + b'9' * max(5000, limit + 1) + b'}')
-        for raw in cases:
-            with self.subTest(kind="nesting" if raw.startswith(b'[') else "integer"):
+            cases.append(("integer", b'{"number": ' + b'9' * max(5000, limit + 1) + b'}'))
+        for kind, raw in cases:
+            with self.subTest(kind=kind):
                 self.source.write_bytes(raw)
+                self.output.write_bytes(b"keep")
                 before = self.snapshot()
-                payload = self.envelope(self.run_cli(self.source, "--check", "--diagnostics", "json"), 2)
+                result = self.run_cli(self.source, "--check", "--diagnostics", "json",
+                                      decoder_recursion=kind == "recursion")
+                payload = self.envelope(result, 2)
                 self.assertFalse(payload["valid"])
+                self.assertFalse(payload["ready"])
                 self.assertIn("invalid JSON", payload["diagnostics"][0]["message"])
+                if kind == "recursion":
+                    self.assertIn("decoder recursion guard", payload["diagnostics"][0]["message"])
+                self.assertEqual(result.stderr, "")
                 self.assertEqual(self.snapshot(), before)
+                self.assertEqual({p.name for p in self.root.iterdir()}, set(before))
 
     def test_directory_input_has_json_io_error(self):
         payload = self.envelope(self.run_cli(self.root, "--check", "--diagnostics", "json"), 3)

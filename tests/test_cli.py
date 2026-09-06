@@ -28,12 +28,23 @@ class CliTests(unittest.TestCase):
         self.original = json.dumps(self.data, ensure_ascii=False).encode("utf-8")
         self.source.write_bytes(self.original)
 
-    def run_cli(self, *args, env=None):
+    def run_cli(self, *args, env=None, decoder_recursion=False):
         environment = dict(os.environ, PYTHONPATH=str(ROOT / "src"), PYTHONDONTWRITEBYTECODE="1")
         if env:
             environment.update(env)
+        command = [sys.executable, "-m", "reference_atlas.cli"]
+        if decoder_recursion:
+            # Inject only at the decoder: real argument parsing, source open/
+            # fstat, diagnostics, and publication boundaries remain exercised.
+            script = (
+                "from unittest.mock import patch\n"
+                "from reference_atlas import cli\n"
+                "with patch.object(cli.json, 'load', side_effect=RecursionError('decoder recursion guard')):\n"
+                "    raise SystemExit(cli.main())\n"
+            )
+            command = [sys.executable, "-c", script]
         return subprocess.run(
-            [sys.executable, "-m", "reference_atlas.cli", *map(str, args)],
+            [*command, *map(str, args)],
             cwd=self.root, env=environment, capture_output=True, encoding="utf-8", timeout=10,
         )
 
@@ -201,19 +212,15 @@ class CliTests(unittest.TestCase):
         self.assertIn("invalid JSON", result.stderr)
         self.assert_unchanged(b"keep")
 
-    def test_excessive_nesting_preserves_existing_output_with_force(self):
-        # The C JSON decoder's nesting limit can differ from Python's
-        # recursion limit: 3.12 accepts 2,000 levels and 3.14 accepts 50,000.
-        # Keep the input bounded while exceeding those decoder limits.
-        depth = 100_000
-        nested = b"[" * depth + b"0" + b"]" * depth
-        self.original = self.original.rstrip()[:-1] + b', "unused": ' + nested + b'}'
-        self.source.write_bytes(self.original)
+    def test_decoder_recursion_preserves_existing_output_with_force(self):
+        # Decoder nesting thresholds vary across interpreter builds; test the
+        # exception boundary deterministically rather than guessing a depth.
         self.output.write_bytes(b"keep")
-        result = self.run_cli(self.source, self.output, "--force")
+        result = self.run_cli(self.source, self.output, "--force", decoder_recursion=True)
         self.assert_error(result, 2, self.source)
         self.assertEqual(len(result.stderr.splitlines()), 1)
         self.assertIn("invalid JSON", result.stderr)
+        self.assertIn("decoder recursion guard", result.stderr)
         self.assert_unchanged(b"keep")
 
     def test_renderer_recursion_errors_are_not_swallowed(self):
