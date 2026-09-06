@@ -105,6 +105,72 @@ class OutputPermissionTests(unittest.TestCase):
                         self.output.chmod(0o600)
                         self.assert_success(result, operation, 0o600)
 
+    def test_staging_preserves_setgid_directory_inheritance(self):
+        groups = [gid for gid in os.getgroups() if gid != os.getegid()]
+        group = groups[0] if groups else os.getegid()
+        os.chown(self.root, -1, group)
+        self.root.chmod(0o2770)
+        self.assertTrue(self.root.stat().st_mode & stat.S_ISGID)
+        real_fdopen = os.fdopen
+        for operation in ("init", "render"):
+            with self.subTest(operation=operation):
+                self.output.unlink(missing_ok=True)
+
+                def inspect(*args, **kwargs):
+                    staging = next(self.root.glob(".reference-atlas-*"))
+                    self.assertTrue(staging.stat().st_mode & stat.S_ISGID)
+                    self.assertEqual(staging.stat().st_mode & 0o077, 0)
+                    self.assertEqual(os.fstat(args[0]).st_gid, group)
+                    return real_fdopen(*args, **kwargs)
+
+                with mock.patch.object(os, "fdopen", side_effect=inspect):
+                    code, stdout, stderr = self.invoke(operation)
+                self.assertEqual(code, 0, stderr)
+                self.assertEqual(self.output.stat().st_gid, group)
+                self.assertFalse(self.output.stat().st_mode & stat.S_ISGID)
+                self.assertEqual(set(self.root.iterdir()), {self.source, self.output})
+                for mask in (0o700, 0o777):
+                    for scenario in ("new", "force_absent", "force_existing"):
+                        with self.subTest(mask=oct(mask), scenario=scenario):
+                            self.output.unlink()
+                            if scenario == "force_existing":
+                                self.output.write_bytes(b"keep")
+                                self.output.chmod(0o640)
+                            result = self.run_child(operation, mask, scenario != "new")
+                            self.assertEqual(result.returncode, 0, result.stderr)
+                            self.assertEqual(self.output.stat().st_gid, group)
+                            mode = 0o640 if scenario == "force_existing" else 0o666 & ~mask
+                            self.assertEqual(stat.S_IMODE(self.output.stat().st_mode), mode)
+                            self.output.chmod(0o600)
+                            self.assert_success(result, operation, 0o600)
+
+    def test_lost_directory_setgid_fails_without_replacing_output(self):
+        real_mkdtemp, real_chmod = tempfile.mkdtemp, os.chmod
+
+        def restricted_staging(*args, **kwargs):
+            directory = real_mkdtemp(*args, **kwargs)
+            real_chmod(directory, stat.S_ISGID)
+            return directory
+
+        def kernel_strips_setgid(path, mode):
+            # POSIX may silently strip setgid when the caller is not in the
+            # inherited group. Simulate that kernel result without privileges.
+            real_chmod(path, mode & ~stat.S_ISGID)
+
+        for operation in ("init", "render"):
+            with self.subTest(operation=operation):
+                self.output.write_bytes(b"keep")
+                self.output.chmod(0o640)
+                with mock.patch.object(tempfile, "mkdtemp", side_effect=restricted_staging), mock.patch.object(os, "chmod", side_effect=kernel_strips_setgid):
+                    code, stdout, stderr = self.invoke(operation, True)
+                self.assertEqual(code, 3)
+                self.assertEqual(stdout, "")
+                self.assertIn("cannot preserve staging directory group inheritance", stderr)
+                self.assertEqual(self.output.read_bytes(), b"keep")
+                self.assertEqual(stat.S_IMODE(self.output.stat().st_mode), 0o640)
+                self.assertEqual(self.source.read_bytes(), self.original)
+                self.assertEqual(set(self.root.iterdir()), {self.source, self.output})
+
     def test_force_strips_special_bits(self):
         for operation in ("init", "render"):
             for special in (stat.S_ISUID, stat.S_ISGID, stat.S_ISVTX):

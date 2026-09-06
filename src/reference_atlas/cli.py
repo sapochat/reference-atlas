@@ -39,9 +39,14 @@ def _publish(markdown: str, source_stat, output: Path, force: bool) -> None:
     temporary = staging / "output.tmp"
     try:
         if os.name == "posix":
-            # The umask can remove owner access from mkdtemp too. Restore
-            # private traversal without relaxing the output file's umask.
-            os.chmod(staging, 0o700)
+            # Restore private traversal while retaining directory setgid
+            # inheritance; output files still receive their own umask/mode.
+            staging_mode = staging.stat().st_mode
+            inherited_setgid = staging_mode & stat.S_ISGID
+            if staging_mode & 0o700 != 0o700:
+                os.chmod(staging, 0o700 | inherited_setgid)
+                if inherited_setgid and not staging.stat().st_mode & stat.S_ISGID:
+                    raise PermissionError("cannot preserve staging directory group inheritance")
         fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
         try:
             stream = os.fdopen(fd, "w", encoding="utf-8", newline="\n")
